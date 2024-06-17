@@ -63,27 +63,52 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   ! Input file variables
   logical :: DomainAveraged_DynProc = .false., useWallDamping = .false., useSGSDynamicRestart = .false., useVerticalTfilter = .false.
   integer :: DynamicProcedureType = 0, SGSmodelID = 0, WallModelType = 0, DynProcFreq = 1
-  real(rkind) :: ncWall = 1.d0, Csgs = 0.17d0, z0 = 0.01d0, deltaRatio = 2.d0, turbPrandtl = 0.4d0, Cy = 100.d0 
+  integer :: i, j
+
+  real(rkind) :: ncWall = 1.d0, Csgs = 0.17d0, z0 = 0.01d0, deltaRatio = 2.d0, turbPrandtl = 0.4d0, Cy = 100.d0
   real(rkind) :: z0t = 0.001d0
   character(len=clen) :: SGSDynamicRestartFile
   logical :: explicitCalcEdgeEddyViscosity = .false., UseDynamicProcedureScalar = .false., useScalarBounding = .false.
-  logical :: usePrSGS = .false., useFullyLocalWM = .false.  
-  integer :: ierr, WM_matchingIndex = 1, WallFunctionType = 1 
-  real(rkind) :: lowbound = 0.d0 , highbound = 1.d0 , SurfaceFilterFact = 1.d0 
+  logical :: usePrSGS = .false., useFullyLocalWM = .false.
+  integer :: ierr, WM_matchingIndex = 1, WallFunctionType = 1
+  real(rkind) :: lowbound = 0.d0 , highbound = 1.d0 , SurfaceFilterFact = 1.2d0
+  real(rkind), dimension(:,:), allocatable :: z0_surf    ! YIS (flexible size)
+  logical :: z0_field    ! YIS
 
-  namelist /SGS_MODEL/ DynamicProcedureType, SGSmodelID, z0, z0t, &
+
+  namelist /SGS_MODEL/ DynamicProcedureType, SGSmodelID, z0_field, z0, z0t, &
                  useWallDamping, ncWall, Csgs, WallModelType, usePrSGS, &
                  DynProcFreq, useSGSDynamicRestart, useVerticalTfilter,&
                  DomainAveraged_DynProc, SGSDynamicRestartFile, &
                  explicitCalcEdgeEddyViscosity, &
                  UseDynamicProcedureScalar, deltaRatio, turbPrandtl, &
-                 useScalarBounding, Cy, lowbound, highbound, WM_matchingIndex, & 
+                 useScalarBounding, Cy, lowbound, highbound, WM_matchingIndex, &
                  WallFunctionType, useFullyLocalWM, SurfaceFilterFact  
+
 
   open(unit=123, file=trim(inputfile), form='FORMATTED', iostat=ierr)
   read(unit=123, NML=SGS_MODEL)
   close(123)
   
+  ! YIS start
+  allocate(z0_surf(gpC%zsz(1),gpC%zsz(2)))
+  if (z0_field) then
+      ! Initialize z0init values
+      do i = 1, 10
+          z0_surf(i, :) = 6.8d-5
+      end do
+      do i = 11, 13
+          z0_surf(i, :) = 6.8d-3
+      end do
+      do i = 14, 32
+          z0_surf(i, :) = 6.8d-5
+      end do
+  else
+      ! For simplicity, initializing to zero in this example
+      z0_surf = 0.0_rkind
+  end if
+  ! YIS end 
+ 
   this%gpC => gpC
   this%gpE => gpE
   this%spectC => spectC
@@ -158,6 +183,11 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   this%UseDynamicProcedureScalar = UseDynamicProcedureScalar
   this%explicitCalcEdgeEddyViscosity = explicitCalcEdgeEddyViscosity
   this%mid = SGSmodelID
+  ! YIS vary z0 field start
+  this%z0_field = z0_field
+  allocate(this%z0_surf(gpC%zsz(1),gpC%zsz(2)))
+  this%z0_surf = z0_surf
+  ! YIS vary z0 field end 
   this%z0  = z0
   this%z0t = z0t
   this%DynamicProcedureType = DynamicProcedureType
