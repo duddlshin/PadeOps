@@ -239,8 +239,13 @@ subroutine compute_surface_stress(this)
     ! Compute local wall-quantities at each wall node
     do j = 1,this%gpC%zsz(2)
         do i = 1,this%gpC%zsz(1)
-            call this%compute_local_wallmodel(this%usurf_filt(i,j), this%vsurf_filt(i,j), this%Tmatch_filt(i,j), & 
-                this%wTheta_surf(i,j), this%ustar_surf(i,j), this%Linv_surf(i,j), this%PsiM_surf(i,j), this%T_surf(i,j))
+            if (this%z0_field) then
+                call this%compute_local_wallmodel(this%usurf_filt(i,j), this%vsurf_filt(i,j), this%Tmatch_filt(i,j), & 
+                    this%wTheta_surf(i,j), this%ustar_surf(i,j), this%Linv_surf(i,j), this%PsiM_surf(i,j), this%T_surf(i,j), this%z0_surf(i,j))
+            else
+                call this%compute_local_wallmodel(this%usurf_filt(i,j), this%vsurf_filt(i,j), this%Tmatch_filt(i,j), &
+                    this%wTheta_surf(i,j), this%ustar_surf(i,j), this%Linv_surf(i,j), this%PsiM_surf(i,j), this%T_surf(i,j), this%z0)
+            end if 
         end do 
     end do 
 
@@ -262,9 +267,9 @@ subroutine compute_surface_stress(this)
     this%InvObLength = p_sum(sum(this%Linv_surf))/real(this%gpC%xsz(1)*this%gpC%ysz(2),rkind)
 end subroutine 
 
-subroutine compute_local_wallmodel(this, ux, uy, Tmn, wTh_surf, ustar, Linv, PsiM, T_surf)
+subroutine compute_local_wallmodel(this, ux, uy, Tmn, wTh_surf, ustar, Linv, PsiM, T_surf, z0)   ! YIS: z0 added
     class(sgs_igrid), intent(inout) :: this
-    real(rkind), intent(in) :: ux, uy, Tmn
+    real(rkind), intent(in) :: ux, uy, Tmn, z0     ! YIS: z0 added
     real(rkind), intent(out) :: wTh_surf, ustar, Linv, PsiM, T_surf
 
     real(rkind) :: ustarNew, ustarDiff, dTheta, at
@@ -341,7 +346,7 @@ subroutine compute_local_wallmodel(this, ux, uy, Tmn, wTh_surf, ustar, Linv, Psi
           T_surf = Tmn + wTh*(at-PsiH)/(ustar*kappa)
       end select
    else
-          ustar = sqrt(ux*ux + uy*uy)*kappa/(log(hwm/this%z0))
+          ustar = sqrt(ux*ux + uy*uy)*kappa/(log(hwm/z0))
           Linv = zero
           wTh_surf = zero
           PsiM = zero
@@ -438,6 +443,8 @@ subroutine getSurfaceQuantities(this)
           this%PsiM = PsiM
       end select
    else
+          ! This will also need a definition of z0 that is either local or
+          ! not????? but not implemented here yet YIS
           this%ustar = this%Uspmn*kappa/(log(hwm/this%z0))
           this%invObLength = zero
           this%wTh_surf = zero
