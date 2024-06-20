@@ -30,19 +30,22 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     type(decomp_info),               intent(in)    :: decompC
     type(decomp_info),               intent(in)    :: decompE
     character(len=*),                intent(in)    :: inputfile
+    integer :: i, j, nx, ny        ! YIS
+    real(rkind), dimension(:,:), allocatable :: z0init_surf    ! YIS
     real(rkind), dimension(:,:,:,:), intent(in), target    :: mesh
     real(rkind), dimension(:,:,:,:), intent(inout), target :: fieldsC
     real(rkind), dimension(:,:,:,:), intent(inout), target :: fieldsE
     integer :: ioUnit
     real(rkind), dimension(:,:,:), pointer :: u, v, w, wC, x, y, z
-    real(rkind) :: z0init, epsnd = 0.02
+    real(rkind) :: z0init = 0.1d0, epsnd = 0.02
     real(rkind), dimension(:,:,:), allocatable :: randArr, ybuffC, ybuffE, zbuffC, zbuffE
     integer :: nz, nzE
     real(rkind) :: Xperiods = 3.d0, Yperiods = 3.d0!, Zperiods = 1.d0
     real(rkind) :: zpeak = 0.2d0, noiseAmp = 1.d-2
     real(rkind)  :: Lx = one, Ly = one, Lz = one
     logical :: initPurturbations = .true.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init, initPurturbations
+    logical :: z0_field = .false.  ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0_field, z0init, initPurturbations
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -61,18 +64,50 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
 
     epsnd = 5.d0
 
-
-    ! Initialize a z0init field here?
-
+    ! YIS start
+    ! This is currently a specific z0 field; will need to write code that allows
+    ! more variations
+    allocate(z0init_surf(size(wC,1),size(wC,2)))
+    ! Initialize z0init matrix if the flag is set
+    if (z0_field) then
+        ! Initialize z0init values
+        do i = 1, size(z0init_surf, 1)  ! Loop over all rows
+            do j = 1, size(z0init_surf, 2)  ! Loop over all columns
+                if (j <= 10) then
+                    z0init_surf(i, j) = 6.8d-5
+                elseif (j >= 11 .and. j <= 13) then
+                    z0init_surf(i, j) = 6.8d-3
+                elseif (j >= 14) then
+                    z0init_surf(i, j) = 6.8d-5
+                end if
+            end do
+        end do
+    else
+        ! Default initialization or handle error if needed
+        ! For simplicity, initializing to zero in this example
+        z0init_surf = 0.0_rkind
+    end if
+    ! YIS end
 
     if (initPurturbations) then
       u = (one/kappa)*log(z/z0init) + epsnd*cos(Yperiods*two*pi*y/Ly)*exp(-half*(z/zpeak/Lz)**2)
       v = epsnd*(z/Lz)*cos(Xperiods*two*pi*x/Lx)*exp(-half*(z/zpeak/Lz)**2)
     else
-      u = (one/kappa)*log(z/z0init)
+      ! YIS: will have to change at some point to change this to take in a z0 field
+      if (z0_field) then
+          do j=1,size(mesh,2)
+              do i=1,size(mesh,1)
+                  u(i,j,:) = (one/kappa)*log(z(i,j,:)/z0init_surf(i,j))
+              end do
+          end do          
+      else
+          u = (one/kappa)*log(z/z0init)
+      end if
       v = zero
     end if
     wC= zero
+
+    deallocate(z0init_surf)
 
     allocate(randArr(size(wC,1),size(wC,2),size(wC,3)))
 
@@ -142,10 +177,10 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     real(rkind) :: ThetaRef, Lx, Ly, Lz, z0init
     integer :: iounit
     logical :: initPurturbations = .false.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init, initPurturbations
+    logical :: z0_field = .false.   ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0_field, z0init, initPurturbations   ! YIS
 
     Tsurf = zero; dTsurf_dt = zero; ThetaRef = one
-
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -165,9 +200,9 @@ subroutine set_planes_io(xplanes, yplanes, zplanes)
 
     allocate(xplanes(nxplanes), yplanes(nyplanes), zplanes(nzplanes))
 
-    xplanes = [64]
-    yplanes = [64]
-    zplanes = [13,39]
+    xplanes = [10]
+    yplanes = [10]
+    zplanes = [10,10]
 
 end subroutine
 
@@ -206,16 +241,17 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     use decomp_2d,        only: decomp_info
     implicit none
 
-    type(decomp_info),                                          intent(in)    ::decomp
-    real(rkind),                                                intent(inout) ::dx,dy,dz
+    type(decomp_info),           intent(in)    ::decomp
+    real(rkind),                 intent(inout) ::dx,dy,dz
     real(rkind), dimension(:,:,:,:), intent(inout) :: mesh
-    real(rkind) :: z0init
     integer :: i,j,k, ioUnit
     character(len=*),                intent(in)    :: inputfile
     integer :: ix1, ixn, iy1, iyn, iz1, izn
     real(rkind)  :: Lx = one, Ly = one, Lz = one
     logical :: initPurturbations = .false.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init, initPurturbations
+    real(rkind) :: z0init = 0.1d0 
+    logical :: z0_field = .false.  ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0_field, z0init, initPurturbations   ! YIS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -264,7 +300,8 @@ subroutine set_Reference_Temperature(inputfile, Tref)
     real(rkind) :: Lx, Ly, Lz, z0init
     integer :: iounit
     logical :: initPurturbations = .false.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init, initPurturbations
+    logical :: z0_field = .false.  ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0_field, z0init, initPurturbations   ! YIS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')

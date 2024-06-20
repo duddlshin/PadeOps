@@ -29,8 +29,9 @@ program half_channel_concurrent
 
     call GETARG(1,inputfile)                                            
 
-    allocate(precursor)                                                       
+    allocate(precursor)                                
     allocate(primary)                                                     
+     
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
     read(unit=ioUnit, NML=concurrent)
@@ -40,7 +41,7 @@ program half_channel_concurrent
     call primary%start_io(.true.)                                          
     call primary%printDivergence()
     
-    call precursor%init(precursor_inputFile, .false.)                                           
+    call precursor%init(precursor_inputFile, .false.)                               
     precursor%Am_I_Primary = .false. 
     call precursor%start_io(.true.)                                           
    
