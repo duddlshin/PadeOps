@@ -7,6 +7,7 @@ end subroutine
 subroutine initWallModel(this, SurfaceFilterFact)
    class(sgs_igrid), intent(inout) :: this
    real(rkind), intent(in) :: SurfaceFilterFact
+   integer :: i   ! YIS: added for for loop 
 
    this%useWallModel = .true.
    allocate(this%tauijWM(this%gpE%xsz(1),this%gpE%xsz(2),this%gpE%xsz(3),2))
@@ -34,6 +35,23 @@ subroutine initWallModel(this, SurfaceFilterFact)
       allocate(this%Linv_surf(this%gpC%zsz(1),this%gpC%zsz(2)))
       allocate(this%T_surf(this%gpC%zsz(1),this%gpC%zsz(2)))
       allocate(this%filteredSpeedSq(this%gpC%xsz(1),this%gpC%xsz(2),this%gpC%xsz(3))) ! Howland: Added 1/25/21
+
+      ! YIS start
+      if (this%z0_field) then
+          allocate(this%z0_surf(this%gpC%zsz(1),this%gpC%zsz(2)))  
+          ! Initialize z0init values
+          do i = 1, 10
+              this%z0_surf(i, :) = 6.8d-5
+          end do
+          do i = 11, 13
+              this%z0_surf(i, :) = 6.8d-3
+          end do
+          do i = 14, 32
+              this%z0_surf(i, :) = 6.8d-5
+          end do
+      end if
+      ! YIS end   
+
       call this%spectC%ResetSurfaceFilter(SurfaceFilterFact)
       call message(2,"Fully local wall model set up with a filter factor:", SurfaceFilterFact)
    end if 
