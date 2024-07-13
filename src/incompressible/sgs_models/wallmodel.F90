@@ -56,7 +56,7 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline)
    complex(rkind), dimension(this%sp_gpC%ysz(1),this%sp_gpC%ysz(2),this%sp_gpC%ysz(3)), intent(in) :: uhat, vhat, That
    real(rkind), dimension(this%gpC%xsz(1),this%gpC%xsz(2),this%gpC%xsz(3)), intent(in) :: u, v, T
    complex(rkind), dimension(:,:,:), pointer :: cbuffz, cbuffy
-   integer :: locator_min(1), locator_max(1), z02_start_idx, z02_end_idx, k  ! YIS: added for for loop
+   integer :: locator_min(1), locator_max(1), k  ! YIS: added for for loop
    real(rkind), dimension(this%gpC%xsz(1)), intent(in) :: xline   ! YIS added to compare with nondimensional x values 07032024
 
    cbuffz => this%cbuffzC(:,:,:,1)
@@ -104,8 +104,8 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline)
                    locator_max = minloc(abs(xline - this%z02_endx))
                   
                    ! Overwrite based on assigned geometry
-                   this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log(this%dz / (two * this%z02)) - this%PsiM))**2               
-                   
+                   this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log(((this%dz / two) - this%zd) / this%z02) - this%PsiM))**2
+ 
                    ! Generates array of filtered speed squared (3D array)
                    call this%getfilteredSpeedSqAtWall(uhat, vhat)              
 
