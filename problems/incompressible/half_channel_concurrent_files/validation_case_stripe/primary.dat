@@ -1,10 +1,10 @@
 &INPUT
-inputdir              = "/pool001/youngin/data/half_channel_concurrent/validation_case_S25R75"   ! Directory for any input files
-outputdir             = "/pool001/youngin/data/half_channel_concurrent/validation_case_S25R75"   ! Directory for all output files
-nx                    = 120         ! Number of points in X
-ny                    = 120         ! Number of points in Y
-nz                    = 120        ! Number of points in Z
-tstop                 = 300.D0     ! Physical time to stop the simulation
+inputdir              = "/pool001/youngin/data/half_channel_concurrent/validation_baseline"   ! Directory for any input files
+outputdir             = "/pool001/youngin/data/half_channel_concurrent/validation_baseline"   ! Directory for all output files
+nx                    = 32         ! Number of points in X
+ny                    = 32         ! Number of points in Y
+nz                    = 32        ! Number of points in Z
+tstop                 = 50.D0     ! Physical time to stop the simulation
 dt                    = -0.0001D0   ! Fixed time step value (only used if CFL is set to negative)
 CFL                   = 0.8D0       ! CFL criterion for calculating the time step (Set to negative to disable)
 prow                  = 0           ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
@@ -25,9 +25,9 @@ t_DivergenceCheck     = 100         ! Check divergence every $ timesteps. Reproj
 /
 /
 &IO
-RunID                 = 2           ! Run Label (All output files will be tagged with this nubber)
-t_restartDump         = 100000        ! Restart File Dumping Frequency  (# of timesteps)
-t_dataDump            = 5000        ! Data dumping frequency (# of timesteps)
+RunID                 = 1           ! Run Label (All output files will be tagged with this nubber)
+t_restartDump         = 10000        ! Restart File Dumping Frequency  (# of timesteps)
+t_dataDump            = 10000        ! Data dumping frequency (# of timesteps)
 ioType                = 0           ! 0: Fortran Binaries, 1: .vtk files
 dumpPlanes            = .TRUE.     ! Dump plane visualations. Select planes in initialize.F90
 t_planeDump           = 20000         ! Plane dumping frequency (# of timesteps)
@@ -137,20 +137,20 @@ t_dumpKSprep          = 10             ! Dumping Frequency for KS files
 Lx                    = 6.280d0 ! Domain Length (appropriate dimesnions/non-dimensionalized)
 Ly                    = 6.280d0 ! Domain Length (appropriate dimesnions/non-dimensionalized)
 Lz                    = 1.0d0               ! Domain Height (appropriate dimesnions/non-dimensionalized)
-z0init                = 1.0d-5              ! Roughness scale used to initialize the profile
-z0init_field          = .TRUE.              ! To initiate a varied z0 field
+z0init                = 6.8d-5              ! Roughness scale used to initialize the profile
+z0init_field          = .FALSE.              ! To initiate a varied z0 field
 z02init               = 1.0d-4              ! Roughness length in patch
 z02init_startx        = 1.57d0             ! Nondimensionalized x position of patch start
 z02init_endx          = 6.280d0 ! Nondimensionalized x position  of patch end
+zd                    = 0.000001           ! displacement length
 /
 /
 &BUDGET_TIME_AVG
-do_budgets            = .FALSE.              ! Perform budget calculations?
-budgetType            = 3                   ! See type descriptions in budget_time_avg.F90
-budgets_dir           = "/pool001/youngin/data/halfchannel/run29"              ! Write in default output directory
-tidx_compute          = 1                   ! How often should budgets be computed?
-tidx_dump             = 100                 ! How often should budget files be written to disk?
-tidx_budget_start     = 60000               ! Start budget computation from this timestep onward
+do_budgets            = .TRUE.              ! Perform budget calculations?
+budgetType            = 1                   ! See type descriptions in budget_time_avg.F90
+budgets_dir           = "/pool001/youngin/data/half_channel_concurrent/validation_baseline"              ! Write in default output directory      tidx_compute          = 1                   ! How often should budgets be computed?
+tidx_dump             = 1000                 ! How often should budget files be written to disk?
+tidx_budget_start     = 1                  ! Start budget computation from this timestep onward
 restart_budgets       = .FALSE.             ! use existing budget file to restart budget calculations?
 restart_rid           = 2                   ! Restart budget file run index
 restart_tid           = 99999               ! Restart budget file time index
