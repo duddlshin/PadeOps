@@ -21,6 +21,10 @@ subroutine initWallModel(this, SurfaceFilterFact)
    case (2) ! Bou-Zeid Wall model
       allocate(this%filteredSpeedSq(this%gpC%xsz(1),this%gpC%xsz(2),this%gpC%xsz(3)))
       allocate(this%WallMFactors(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07032024 
+      allocate(this%WallMEpsilon(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07142024 
+      allocate(this%WallMUmatching(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07142024 
+      this%WallMUmatching = 0.d0
+
 
    case default
       call gracefulExit("Invalid choice of Wallmodel.",324)
@@ -51,13 +55,14 @@ subroutine initWallModel(this, SurfaceFilterFact)
 end subroutine
 
 
-subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline)
+subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
    class(sgs_igrid), intent(inout) :: this
    complex(rkind), dimension(this%sp_gpC%ysz(1),this%sp_gpC%ysz(2),this%sp_gpC%ysz(3)), intent(in) :: uhat, vhat, That
    real(rkind), dimension(this%gpC%xsz(1),this%gpC%xsz(2),this%gpC%xsz(3)), intent(in) :: u, v, T
    complex(rkind), dimension(:,:,:), pointer :: cbuffz, cbuffy
    integer :: locator_min(1), locator_max(1), k  ! YIS: added for for loop
    real(rkind), dimension(this%gpC%xsz(1)), intent(in) :: xline   ! YIS added to compare with nondimensional x values 07032024
+   real(rkind) :: matchingloc, dt  ! YIS added 
 
    cbuffz => this%cbuffzC(:,:,:,1)
    cbuffy => this%cbuffyC(:,:,:,1)
@@ -102,17 +107,29 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline)
  
                    locator_min = minloc(abs(xline - this%z02_startx))
                    locator_max = minloc(abs(xline - this%z02_endx))
-                  
+                   
+                   ! Matching location for computing wall factor 
+                   matchingloc = real(this%WM_matchingIndex)-real(one)/real(two)
+
                    ! Overwrite based on assigned geometry
-                   this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log(((this%dz / two) - this%zd) / this%z02) - this%PsiM))**2
+                   this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log((this%dz*matchingloc - this%zd) / this%z02) - this%PsiM))**2
  
                    ! Generates array of filtered speed squared (3D array)
                    call this%getfilteredSpeedSqAtWall(uhat, vhat)              
-
+     
                    do k = 1, this%gpC%xsz(3)
                        this%filteredSpeedSq(:,:,k) = this%WallMFactors(:,:) * this%filteredSpeedSq(:,:,k)
                    end do                    
-                     
+                    
+                   ! Temporal filter for matching velocity 07142024
+                   this%WallMEpsilon = 2.d0 * kappa * dt / this%dz
+                   this%WallMUmatching = (1.d0 - this%WallMEpsilon) * this%WallMUmatching + this%WallMEpsilon * this%filteredSpeedSq(:,:,this%WM_matchingIndex)
+
+                   do k = 1, this%gpC%xsz(3)
+                       this%filteredSpeedSq(:,:,k) = this%WallMUmatching 
+                   end do                    
+
+
                    call this%spectC%fft(this%filteredSpeedSq, cbuffy)
                    call transpose_y_to_z(cbuffy, cbuffz, this%sp_gpC)
                   
@@ -234,12 +251,12 @@ subroutine getfilteredSpeedSqAtWall(this, uhatC, vhatC)
     rbuffx1 => this%filteredSpeedSq; rbuffx2 => this%rbuffxC(:,:,:,1)
 
     call transpose_y_to_z(uhatC,tauWallH,this%sp_gpC)
-    call this%spectC%SurfaceFilter_ip(tauWallH(:,:,1))   ! 1 index should be variable WM_matchingindex (YIS)
+    call this%spectC%SurfaceFilter_ip(tauWallH(:,:,this%WM_matchingindex)) 
     call transpose_z_to_y(tauWallH,cbuffy, this%sp_gpC)
     call this%spectC%ifft(cbuffy,rbuffx1)
 
     call transpose_y_to_z(vhatC,tauWallH,this%sp_gpC)
-    call this%spectC%SurfaceFilter_ip(tauWallH(:,:,1))
+    call this%spectC%SurfaceFilter_ip(tauWallH(:,:,this%WM_matchingindex))
     call transpose_z_to_y(tauWallH,cbuffy, this%sp_gpC)
     call this%spectC%ifft(cbuffy,rbuffx2)
 
