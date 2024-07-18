@@ -446,6 +446,7 @@ contains
         logical :: initPurturbations = .true.
         logical :: z0init_field, Primary_Run = .true.   ! YIS
         real(rkind) :: z0init, z02init, z02init_startx, z02init_endx, zd   ! YIS 
+        logical :: CES_LES_int_var   ! YIS (randomizing seed)
         ! YIS
 
         real(rkind), dimension(:,:,:), allocatable, target :: tmpzE, tmpzC, tmpyE, tmpyC
@@ -470,7 +471,7 @@ contains
         namelist /SCALARS/ num_scalars, scalar_info_dir
         namelist /TURB_PRESSURE/ MeanTIDX, MeanRID, MeanFilesDir
         namelist /MOISTURE/ moistureFactor, moisture_info_dir
-        namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd         ! YIS
+        namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! YIS
 
         ! STEP 1: READ INPUT 
         ioUnit = 11

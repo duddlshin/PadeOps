@@ -154,6 +154,9 @@
        ! Step 6a: SGS  Stress Terms
        if (this%useSGS) then
          if(associated(this%usgs)) then
+
+           ! print *, "dt in igrid file: ", this%dt
+
            call this%sgsmodel%getRHS_SGS(this%usgs, this%vsgs, this%wsgs,      this%duidxjC, this%duidxjE,    &
                                          this%uhat,  this%vhat,  this%whatC,   this%That,    this%u,       &
                                          this%v,     this%wC,    this%T,       this%newTimeStep,this%dTdxC,   this%dTdyC,   & 
