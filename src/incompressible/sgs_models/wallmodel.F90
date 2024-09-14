@@ -20,13 +20,15 @@ subroutine initWallModel(this, SurfaceFilterFact)
 
    case (2) ! Bou-Zeid Wall model
       allocate(this%filteredSpeedSq(this%gpC%xsz(1),this%gpC%xsz(2),this%gpC%xsz(3)))
-      allocate(this%WallMFactors(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07032024 
-      allocate(this%WallMEpsilon(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07142024 
-      allocate(this%WallMUmatching(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07142024 
-      allocate(this%WallMVmatching(this%gpC%xsz(1),this%gpC%xsz(2)))     ! YIS added 07142024 
-      this%WallMUmatching = 0.1d0     ! YIS added 07142024
-      this%WallMVmatching = 0.1d0     ! YIS added 07142024
- 
+      allocate(this%WallMFactors(this%gpC%xsz(1),this%gpC%xsz(2)))     ! EYS added 07032024
+      allocate(this%WallMEpsilon(this%gpC%xsz(1),this%gpC%xsz(2)))     ! EYS added 07142024
+      allocate(this%WallMUmatching(this%gpC%xsz(1),this%gpC%xsz(2)))     ! EYS added 07142024
+      allocate(this%WallMVmatching(this%gpC%xsz(1),this%gpC%xsz(2)))     ! EYS added 07142024
+      this%WallMUmatching = 0.1d0     ! EYS added 07142024
+      this%WallMVmatching = 0.1d0     ! EYS added 07142024
+
+      call this%spectC%ResetSurfaceFilter(SurfaceFilterFact)   ! EYS added
+      call message(2,"Bou-Zeid wall model set up with a filter factor:", SurfaceFilterFact)   ! EYS added
    case default
       call gracefulExit("Invalid choice of Wallmodel.",324)
    end select
@@ -61,9 +63,9 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
    complex(rkind), dimension(this%sp_gpC%ysz(1),this%sp_gpC%ysz(2),this%sp_gpC%ysz(3)), intent(in) :: uhat, vhat, That
    real(rkind), dimension(this%gpC%xsz(1),this%gpC%xsz(2),this%gpC%xsz(3)), intent(in) :: u, v, T
    complex(rkind), dimension(:,:,:), pointer :: cbuffz, cbuffy
-   integer :: locator_min(1), locator_max(1), k  ! YIS: added for for loop
-   real(rkind), dimension(this%gpC%xsz(1)), intent(in) :: xline   ! YIS added to compare with nondimensional x values 07032024
-   real(rkind) :: matchingloc, dt  ! YIS added 
+   integer :: locator_min(1), locator_max(1), k  ! EYS: added for for loop
+   real(rkind), dimension(this%gpC%xsz(1)), intent(in) :: xline   ! EYS added to compare with nondimensional x values 07032024
+   real(rkind) :: matchingloc, dt  ! EYS added 
 
    cbuffz => this%cbuffzC(:,:,:,1)
    cbuffy => this%cbuffyC(:,:,:,1)
@@ -97,10 +99,14 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
         case (2) ! Bou-zeid Wall model 
            this%WallMFactor = -(kappa / (log(this%dz / (two * this%z0)) - this%PsiM)) ** 2
 
-           ! YIS: formulate WM epsilon 
-           this%WallMEpsilon = 0.02d0 * kappa * dt / this%dz
+           ! EYS: formulate WM epsilon 
+           if (this%TemporalFilter) then
+               this%WallMEpsilon = this%WMEpsilonFact * 2.0d0 * kappa * dt / this%dz
+           else 
+               this%WallMEpsilon = 1.0d0
+           end if
 
-           ! YIS: to run in concurrent mode; if no concurrent precursor, run will default to Primary Run=.true.
+           ! EYS: to run in concurrent mode; if no concurrent precursor, run will default to Primary Run=.true.
            if (this%Primary_Run) then
                if (this%z0_field) then
                    ! Set default to z0 
@@ -114,19 +120,7 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
                    ! Overwrite based on assigned geometry
                    this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log((this%dz*matchingloc - this%zd) / this%z02) - this%PsiM))**2
  
-                   ! Generates array of filtered speed squared (3D array)
-                   ! call this%getfilteredSpeedSqAtWall(uhat, vhat)              
-     
-                   ! do k = 1, this%gpC%xsz(3)
-                   !     this%filteredSpeedSq(:,:,k) = this%WallMFactors(:,:) * this%filteredSpeedSq(:,:,k)
-                   ! end do                    
-                    
                    call this%getfilteredSpeedSqAtWall(uhat, vhat)
-
-                   ! this%WallMUmatching = (1.d0 - this%WallMEpsilon) * this%WallMUmatching + this%WallMEpsilon * this%filteredSpeedSq(:,:,this%WM_matchingIndex)
-                   ! do k = 1, this%gpC%xsz(3)
-                   !     this%filteredSpeedSq(:,:,k) = this%WallMUmatching 
-                   ! end do                    
 
                    do k = 1, this%gpC%xsz(3)
                        this%filteredSpeedSq(:,:,k) = this%WallMFactors(:,:) * this%filteredSpeedSq(:,:,k)
@@ -176,7 +170,7 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
                 call transpose_z_to_y(this%tauijWMhat_inZ(:,:,:,2), this%tauijWMhat_inY(:,:,:,2), this%sp_gpE)
                 call this%spectE%ifft(this%tauijWMhat_inY(:,:,:,2), this%tauijWM(:,:,:,2)) 
            end if
-           ! YIS
+           ! EYS
 
        end select
    end if 
@@ -245,7 +239,7 @@ subroutine getfilteredSpeedSqAtWall(this, uhatC, vhatC)
 
     real(rkind), dimension(:,:,:), pointer :: rbuffx1, rbuffx2
     complex(rkind), dimension(:,:,:), pointer :: cbuffy, tauWallH
-    integer :: k   ! YIS    
+    integer :: k   ! EYS    
 
     cbuffy => this%cbuffyC(:,:,:,1); tauWallH => this%cbuffzC(:,:,:,1)     
     rbuffx1 => this%filteredSpeedSq; rbuffx2 => this%rbuffxC(:,:,:,1)
@@ -260,15 +254,17 @@ subroutine getfilteredSpeedSqAtWall(this, uhatC, vhatC)
     call transpose_z_to_y(tauWallH,cbuffy, this%sp_gpC)
     call this%spectC%ifft(cbuffy,rbuffx2)
     
-    ! YIS: Temporal filter for matching velocity 07142024
-    this%WallMUmatching = (1.d0 - this%WallMEpsilon) * this%WallMUmatching + this%WallMEpsilon * rbuffx1(:,:,this%WM_matchingIndex)
-    this%WallMVmatching = (1.d0 - this%WallMEpsilon) * this%WallMVmatching + this%WallMEpsilon * rbuffx2(:,:,this%WM_matchingIndex)
+    ! EYS: Temporal filter for matching velocity 07142024
+    if (this%TemporalFilter) then 
+        this%WallMUmatching = (1.d0 - this%WallMEpsilon) * this%WallMUmatching + this%WallMEpsilon * rbuffx1(:,:,this%WM_matchingIndex)
+        this%WallMVmatching = (1.d0 - this%WallMEpsilon) * this%WallMVmatching + this%WallMEpsilon * rbuffx2(:,:,this%WM_matchingIndex)
         
-    do k = 1, this%gpC%xsz(3)
-        rbuffx1(:,:,k) = this%WallMUmatching 
-        rbuffx2(:,:,k) = this%WallMVmatching 
-    end do                    
-
+        do k = 1, this%gpC%xsz(3)
+            rbuffx1(:,:,k) = this%WallMUmatching 
+            rbuffx2(:,:,k) = this%WallMVmatching 
+        end do                    
+    end if
+    
     rbuffx1 = rbuffx1*rbuffx1
     rbuffx2 = rbuffx2*rbuffx2
     rbuffx1 = rbuffx1 + rbuffx2

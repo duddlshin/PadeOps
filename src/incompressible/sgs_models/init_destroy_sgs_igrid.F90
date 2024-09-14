@@ -43,7 +43,7 @@ subroutine link_pointers(this, nuSGS, tauSGS_ij, tau13, tau23, q1, q2, q3, kappa
    end if
 end subroutine 
 
-subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, zMeshC, fBody_x, fBody_y, fBody_z, computeFbody, PadeDer, cbuffyC, cbuffzC, cbuffyE, cbuffzE, rbuffxC, rbuffyC, rbuffzC, rbuffyE, rbuffzE, Tsurf, ThetaRef, wTh_surf, Fr, Re, isInviscid, isStratified, botBC_temp, initSpinUp, z0, z0_field, z02, z02_startx, z02_endx, Primary_Run, zd)   ! YIS added z0 things at the end
+subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, zMeshC, fBody_x, fBody_y, fBody_z, computeFbody, PadeDer, cbuffyC, cbuffzC, cbuffyE, cbuffzE, rbuffxC, rbuffyC, rbuffzC, rbuffyE, rbuffzE, Tsurf, ThetaRef, wTh_surf, Fr, Re, isInviscid, isStratified, botBC_temp, initSpinUp, z0, z0_field, z02, z02_startx, z02_endx, Primary_Run, zd)   ! EYS added z0 things at the end
 
   class(sgs_igrid), intent(inout), target :: this
   class(decomp_info), intent(in), target :: gpC, gpE
@@ -61,9 +61,9 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   integer, intent(in) :: botBC_temp
   logical, intent(in), optional :: initSpinUp
 
-  ! YIS z0 things
-  logical, intent(in) :: z0_field, Primary_Run    ! YIS
-  real(rkind), intent(in) :: z0, z02, z02_startx, z02_endx, zd  ! YIS
+  ! EYS z0 things
+  logical, intent(in) :: z0_field, Primary_Run    ! EYS
+  real(rkind), intent(in) :: z0, z02, z02_startx, z02_endx, zd  ! EYS
 
   ! Input file variables
   logical :: DomainAveraged_DynProc = .false., useWallDamping = .false., useSGSDynamicRestart = .false., useVerticalTfilter = .false.
@@ -72,9 +72,9 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   real(rkind) :: z0t = 0.001d0
   character(len=clen) :: SGSDynamicRestartFile
   logical :: explicitCalcEdgeEddyViscosity = .false., UseDynamicProcedureScalar = .false., useScalarBounding = .false.
-  logical :: usePrSGS = .false., useFullyLocalWM = .false.
+  logical :: usePrSGS = .false., useFullyLocalWM = .false., TemporalFilter = .false.
   integer :: ierr, WM_matchingIndex = 1, WallFunctionType = 1
-  real(rkind) :: lowbound = 0.d0 , highbound = 1.d0 , SurfaceFilterFact = 1.2d0
+  real(rkind) :: lowbound = 0.d0 , highbound = 1.d0 , SurfaceFilterFact = 1.2d0, WMEpsilonFact = 0.0d0
   
 
   namelist /SGS_MODEL/ DynamicProcedureType, SGSmodelID, z0t, &
@@ -84,7 +84,7 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
                  explicitCalcEdgeEddyViscosity, &
                  UseDynamicProcedureScalar, deltaRatio, turbPrandtl, &
                  useScalarBounding, Cy, lowbound, highbound, WM_matchingIndex, &
-                 WallFunctionType, useFullyLocalWM, SurfaceFilterFact  
+                 WallFunctionType, useFullyLocalWM, SurfaceFilterFact, WMEpsilonFact, TemporalFilter
 
 
   open(unit=123, file=trim(inputfile), form='FORMATTED', iostat=ierr)
@@ -167,8 +167,8 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   this%explicitCalcEdgeEddyViscosity = explicitCalcEdgeEddyViscosity
   this%mid = SGSmodelID
 
-  ! YIS
-  this%z0_field = z0_field   ! YIS added toggle for initiating z0 field
+  ! EYS
+  this%z0_field = z0_field   ! EYS added toggle for initiating z0 field
   this%z0  = z0
   this%z0t = z0t
   this%z02 = z02
@@ -176,7 +176,9 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   this%z02_endx = z02_endx
   this%Primary_Run = Primary_Run
   this%zd = zd
-  ! YIS
+  this%WMEpsilonFact = WMEpsilonFact
+  this%TemporalFilter = TemporalFilter
+  ! EYS
 
   this%DynamicProcedureType = DynamicProcedureType
   this%DynProcFreq = DynProcFreq
