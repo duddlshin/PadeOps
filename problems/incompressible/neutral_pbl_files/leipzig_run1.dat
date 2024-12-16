@@ -1,17 +1,18 @@
 &INPUT
-inputdir                      = "/pool001/youngin/data/tnbl/run2"   ! Directory for any input files 
-outputdir                     = "/pool001/youngin/data/tnbl/run2"   ! Directory for all output files
+inputdir                      = "/scratch/09033/youngin/padeops_data/neutral/tnbl/leipzig"     ! Directory for any input files 
+outputdir                     = "/scratch/09033/youngin/padeops_data/neutral/tnbl/leipzig"     ! Directory for all output files
 nx                            = 126         ! Number of points in X
-ny                            = 64          ! Number of points in Y
+ny                            = 64         ! Number of points in Y
 nz                            = 252         ! Number of points in Z
-tstop                         = 15750.0D0    ! Physical time to stop the simulation
-CFL                           = 1.0D0       ! CFL criterion for calculating the time step (Set to negative to disable)
-dt                            = 0.001D0     ! Fixed time step value (only used if CFL is set to negative)
-prow                          = 0           ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
-pcol                          = 0           ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
-useRestartFile                = .FALSE.      ! Set to false if it's a fresh simulation
-restartFile_TID               = 50000       ! TimeID of the restart file being used
-restartFile_RID               = 1           ! tstop                         = 2160.0D0    ! Physical time to stop the simulation
+tstop                         = 6300.0D0    ! Physical time to stop the simulation
+CFL                           = 1.0D0      ! CFL criterion for calculating the time step (Set to negative to disable)
+dt                            = 0.001D0    ! Fixed time step value (only used if CFL is set to negative)
+prow                          = 0          ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
+pcol                          = 0          ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
+useRestartFile                = .FALSE.    ! Set to false if it's a fresh simulation
+restartFile_TID               = 50000      ! TimeID of the restart file being used
+restartFile_RID               = 1          ! tstop                         = 2160.0D0    ! Physical time to stop the simulation
+Primary_Run                   = .TRUE.
 /
 /
 &NUMERICS
@@ -25,7 +26,7 @@ useExhaustiveFFT              = .TRUE.
 /
 /
 &IO
-RunID                         = 2           ! Run Label (All output files will be tagged with this number)
+RunID                         = 1           ! Run Label (All output files will be tagged with this number)
 t_restartDump                 = 10000        ! Restart File Dumping Frequency  (# of timesteps)
 t_dataDump                    = 5000        ! Data dumping frequency (# of timesteps)
 ioType                        = 0           ! 0: Fortran Binaries, 1: .vtk files
@@ -38,16 +39,16 @@ dump_KAPPA_SGS                = .TRUE.
 /
 /
 &STATS
-tid_StatsDump                 = 5000        ! Dumping Frequency for Statistics file (# of time steps)
-tid_compStats                 = 1           ! Frequency of Computing Statistics
-tSimStartStats                = 20.d0       ! Simulation time for starting stats calculations
+tid_StatsDump                 = 10000        ! Dumping Frequency for Statistics file (# of time steps)
+tid_compStats                 = 10           ! Frequency of Computing Statistics
+tSimStartStats                = 5.d0       ! Simulation time for starting stats calculations
 normStatsByUstar              = .FALSE.     ! Normalize Statistics by ustar at each instant
 computeSpectra                = .FALSE.     ! Compute and time average x - spectra on the run
 timeAvgFullFields             = .FALSE.     ! Time average and store fields on the run
 /
 /
 &OS_INTERACTIONS
-useSystemInteractions         = .TRUE.      ! Do you wish to interact with the program while its running
+useSystemInteractions         = .FALSE.      ! Do you wish to interact with the program while its running
 tSystemInteractions           = 10          ! Check for interactions commands after these many timesteps
 controlDir                    = "null"      ! Check in this directory for command files (NULL = Check in output directory)
 /
@@ -93,16 +94,22 @@ useControl                    = .FALSE.     ! Use PI control to fix yaw angle at
 /
 /
 &SGS_MODEL
-SGSModelID                    = 1           ! 0: smagorinsky (w/ wall function), 1: sigma
-Csgs                          = 0.90d0      ! Model constant (asymptotic value in case wall function is used)
-WallModelType                 = 1           ! 1: Moeng, 2: Bou-zeid et. al.
-z0                            = 0.00075d0   ! Roughness length scale (non-dimensionalized)
-DynamicProcedureType          = 0           ! 0: No dynamic procedure, 1: Planar Avg. Dynamic Proc., 2: Global Dynamic Proc.
-useVerticalTfilter            = .false.     ! Use test filtering in vertical direction for dynamic procedure?
-DynProcFreq                   = 5           ! Dynamic procedure used every DYNPROCFREQ timesteps.
-useWallDamping                = .FALSE.     ! Use the Wall Damping Function
-ncWall                        = 3.d0        ! Wall Damping Function Exponent
-explicitCalcEdgeEddyViscosity = .false.     ! Explicitly calculate or interpolate edge values for eddy viscosity?
+DynamicProcedureType  = 0                   ! 0: No dynamic procedure, 1: Planar Avg. Dynamic Proc., 2: Global Dynamic Proc.
+SGSModelID            = 1                   ! 0: smagorinsky, 1: sigma, 2: Shear Improved Smagorinsky
+useWallDamping        = .FALSE.             ! Use the Wall Damping Function
+ncWall                = 3.d0                ! Wall Damping Function Exponent
+Csgs                  = 0.8d0               ! Asymptotic model constant (wall damping function)
+wallModelType         = 1                   ! 1: Moeng's original model, 2: Bou-Zeid's fully local model
+explicitCalcEdgeEddyViscosity = .FALSE.      ! Explicitely compute eddy viscosity at edges? or interpolate?
+DynProcFreq           = 5                   ! Dynamic procedure used every DYNPROCFREQ timesteps.
+useSGSDynamicRestart  = .FALSE.             ! Clip the constant values when they are negative
+useVerticalTfilter    = .FALSE.             ! Test filter in the vertical direction? Used for Dynamic Procedure
+SGSDynamicRestartFile = "null"              ! Clip the constant values when they are negative
+useFullyLocalWM       = .FALSE.
+WM_matchingIndex      = 1                   ! WM matching location index
+TemporalFilter        = .FALSE.              ! Temporal filter that uses WM Epsilon
+WMEpsilonFact         = 0.0001000d0       ! Factor to the WM Epsilon
+SurfaceFilterFact     = 1.2d0
 /
 /
 &WINDTURBINES
@@ -129,7 +136,7 @@ controlType                   =  1          ! 1: Meneveau 2014, 2: Control G_alp
 angleTrigger                  =  0.1d0      ! Angle at z_ref where control turns on
 /
 /
-&PROBLEM_INPUT
+&PBLINPUT
 Lx                            =  20.0d0     ! Domain Length (appropriate dimesnions/non-dimensionalized)
 Ly                            =  8.0d0      ! Domain Width  (appropriate dimesnions/non-dimensionalized)
 Lz                            =  15.0d0      ! Domain Height (appropriate dimesnions/non-dimensionalized)
@@ -137,28 +144,33 @@ Tref                          =  263.5d0    ! Reference Temp.
 Tsurf0                        =  265.0d0    ! Surface Temp. (at tsim=0) in K (need to take care of the dimensions)
 dTsurf_dt                     =  0.0D0      ! Surface Temp. decrease rate in K/hr. (need to take care of the dimensions)
 z0init                        =  0.00075d0  ! Roughness scale used to initialize the profile
+z0init_field                  =  .FALSE.      ! To initiate a varied z0 field (use only when useFullyLocalWM is true)
+z02init                       =  0.00075d0   ! Roughness length in patch
+z02init_startx                =  6.d0       ! Nondimensionalized x position of patch start
+z02init_endx                  =  10.d0      ! Nondimensionalized x position  of patch end
+zd                            =  0.d0       ! Displacement length    (1/kappa)*ln((z-zd)/z0)
 frameAngle                    =  0.d0       ! Frame angle set to be the same as above, used for initialization
 /
 /
 &BUDGET_TIME_AVG
-do_budgets            = .FALSE.             ! Perform budget calculations? 
-budgetType            = 3                   ! See type descriptions in budget_time_avg.F90
-budgets_dir           = "null"              ! Write in default output directory
-tidx_compute          = 10                  ! How often should budgets be computed?  
-tidx_dump             = 1000                ! How often should budget files be written to disk? 
-tidx_budget_start     = 2000                ! Start budget computation from this timestep onward
-restart_budgets       = .FALSE.             ! use existing budget file to restart budget calculations? 
-restart_rid           = 2                   ! Restart budget file run index
-restart_tid           = 99999               ! Restart budget file time index
-restart_counter       = 11111               ! Restart budget file counter 
+do_budgets                    = .TRUE.              ! Perform budget calculations? 
+budgetType                    = 0                   ! See type descriptions in budget_time_avg.F90
+budgets_dir                   = "/scratch/09033/youngin/padeops_data/neutral/tnbl/leipzig"    ! Write in default output directory
+tidx_compute                  = 5                   ! How often should budgets be computed?  
+tidx_dump                     = 5000                 ! How often should budget files be written to disk? 
+tidx_budget_start             = 10000                ! Start budget computation from this timestep onward
+restart_budgets               = .FALSE.             ! use existing budget file to restart budget calculations? 
+restart_rid                   = 2                   ! Restart budget file run index
+restart_tid                   = 99999               ! Restart budget file time index
+restart_counter               = 11111               ! Restart budget file counter 
 /
 /
 &BUDGET_XY_AVG
-do_budgets                    = .TRUE.      ! Perform budget calculations?
-budgetType                    = 0           ! See type descriptions in budget_xy_avg.F90
-budgets_dir                   = "/pool001/youngin/data/tnbl/run2"   ! Directory for budget files
+do_budgets                    = .FALSE.      ! Perform budget calculations?
+budgetType                    = 3           ! See type descriptions in budget_xy_avg.F90
+budgets_dir                   = "/pool001/youngin/data/tnbl/run1"   ! Directory for budget files
 tidx_compute                  = 5           ! How often should budgets be computed?
-tidx_dump                     = 5000          ! How often should budget files be written to disk?
+tidx_dump                     = 50          ! How often should budget files be written to disk?
 restart_budgets               = .FALSE.     ! use existing budget file to restart budget calculations?
 restart_rid                   = 1           ! Restart budget file run index
 restart_tid                   = 170000      ! Restart budget file time index

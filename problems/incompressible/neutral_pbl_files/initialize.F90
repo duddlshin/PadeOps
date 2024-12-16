@@ -6,7 +6,7 @@ module neutral_pbl_parameters
     use kind_parameters,  only: rkind
     use constants, only: zero, kappa, pi 
     implicit none
-    integer :: seedu = 1175032615
+    integer :: seedu = 321341
     integer :: seedv = 423424
     integer :: seedw = 131344
     real(rkind) :: randomScaleFact = 0.002_rkind ! 0.2% of the mean value
@@ -42,14 +42,23 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     real(rkind)  :: Lx = one, Ly = one, Lz = one, Tref = zero, Tsurf0 = one, dTsurf_dt = -0.05d0, z0init = 1.d-4, frameAngle = -26.d0 
     real(rkind), dimension(:,:,:), allocatable :: randArr, Tpurt, eta
     
-    namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle 
-    !real(rkind)  :: beta, sigma, phi_ref
-    !integer :: z_ref
-    !namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle!, beta, sigma, phi_ref, z_ref
+    ! EYS added variables for randomness in seed at startup
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd  
+    logical :: z0init_field = .FALSE.
+    logical :: CES_LES_int_var = .FALSE.
+    integer :: p
+    character(8) :: date
+    character(10) :: time
+    character(5) :: zone
+    integer,dimension(8) :: values
+    real :: mp
+    character(len=20) :: str
+    
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
-    read(unit=ioUnit, NML=PROBLEM_INPUT)
+    read(unit=ioUnit, NML=PBLINPUT)
     close(ioUnit)    
 
 
@@ -72,26 +81,44 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     allocate(ztmp(decompC%xsz(1),decompC%xsz(2),decompC%xsz(3)))
     allocate(Tpurt(decompC%xsz(1),decompC%xsz(2),decompC%xsz(3)))
     ztmp = z*xDim
-    T = 0.003d0*(ztmp - 700.d0) + 300.d0
-    where(ztmp < 700.d0)
-        T = 300.d0
-    end where
-    T = T + 0.0001d0*ztmp
-
-    ! YIS start
-    ! Liu et al
-    ! T = 300.d0 + 0.003d0*(ztmp)
     
-    ! ! Make into neutral potT profile
-    ! where(ztmp < 2500.d0)
+    ! Conventionally neutral abl temperature profile 
+    ! T = 0.003d0*(ztmp - 700.d0) + 300.d0
+    ! where(ztmp < 700.d0)
     !     T = 300.d0
     ! end where
-    ! YIS end
+    ! T = T + 0.0001d0*ztmp
+
+    ! EYS start
+    ! Liu et al method for CNBL temperature profile
+    T = 300.d0 + 0.001d0*(ztmp)
+    ! EYS end
+
+    ! EYS start
+    ! Make into neutral potT profile
+    ! where(ztmp < 10000.d0)
+    !    T = 300.d0
+    ! end where
+    ! EYS end
+
 
     ! Add random numbers
-    allocate(randArr(size(T,1),size(T,2),size(T,3)))
-    call gaussian_random(randArr,zero,one,seedu + 10*nrank)
-    !randArr = cos(4.d0*2.d0*pi*x)*sin(4.d0*2.d0*pi*y)
+    ! EYS code for generating a random seed each time
+    if (CES_LES_int_var) then
+        call date_and_time(date,time,zone,values)
+        read (unit=time,fmt=*) mp
+        p = int(1000*mp)
+        call message("Adding perturbation")
+        write (str, *) p
+        call message(str)
+        allocate(randArr(size(T,1),size(T,2),size(T,3))) 
+        call gaussian_random(randArr,zero,one,p + 10*nrank)
+    else
+        allocate(randArr(size(T,1),size(T,2),size(T,3)))
+        call gaussian_random(randArr,zero,one,seedu + 10*nrank)   
+    end if
+    
+    ! Adding perturbations   
     do k = 1,size(u,3)
         sig = 0.08
         Tpurt(:,:,k) = sig*randArr(:,:,k)
@@ -159,14 +186,14 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     character(len=*),                intent(in)    :: inputfile
     integer :: ioUnit 
     real(rkind)  :: Lx = one, Ly = one, Lz = one, Tref = zero, Tsurf0 = one, z0init = 1.d-4, frameAngle = 0.d0
-    namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle  
-    !real(rkind)  :: beta, sigma, phi_ref
-    !integer :: z_ref
-    !namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle!, beta, sigma, phi_ref, z_ref    
- 
+    logical :: CES_LES_int_var = .FALSE.
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd
+    logical :: z0init_field = .FALSE.
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
-    read(unit=ioUnit, NML=PROBLEM_INPUT)
+    read(unit=ioUnit, NML=PBLINPUT)
     close(ioUnit)    
 
     dTsurf_dt = dTsurf_dt /  3600.d0
@@ -233,13 +260,14 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     character(len=*),                intent(in)    :: inputfile
     integer :: ix1, ixn, iy1, iyn, iz1, izn
     real(rkind)  :: Lx = one, Ly = one, Lz = one, Tref = zero, Tsurf0 = one, dTsurf_dt = -0.05d0, z0init = 1.d-4, frameAngle = 0.d0
-    !real(rkind)  :: beta, sigma, phi_ref
-    !integer :: z_ref 
-    namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle 
+    logical :: CES_LES_int_var = .FALSE.
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd
+    logical :: z0init_field = .FALSE.
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
-    read(unit=ioUnit, NML=PROBLEM_INPUT)
+    read(unit=ioUnit, NML=PBLINPUT)
     close(ioUnit)    
 
     !Lx = two*pi; Ly = two*pi; Lz = one
@@ -275,26 +303,27 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
 
 end subroutine
 
+
 subroutine set_Reference_Temperature(inputfile, Thetaref)
     use kind_parameters,    only: rkind
-    use constants, only: one, zero 
+    use constants, only: one, zero
     implicit none
     character(len=*),                intent(in)    :: inputfile
     real(rkind), intent(out) :: Thetaref
-    integer :: ioUnit 
-    real(rkind)  :: Lx = one, Ly = one, Lz = one, Tref = zero, Tsurf0 = one, dTsurf_dt = -0.05d0, z0init = 2.5d-4, frameAngle = 0.d0 
-    namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle  
-    !real(rkind)  :: beta, sigma, phi_ref
-    !integer :: z_ref
-    !namelist /PROBLEM_INPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init, frameAngle!, beta, sigma, phi_ref, z_ref     
+    integer :: ioUnit
+    real(rkind)  :: Lx = one, Ly = one, Lz = one, Tref = zero, Tsurf0 = one, dTsurf_dt = -0.05d0, z0init = 2.5d-4, frameAngle = 0.d0
+    logical :: CES_LES_int_var = .FALSE.    
+    logical :: z0init_field = .FALSE.
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
-    read(unit=ioUnit, NML=PROBLEM_INPUT)
-    close(ioUnit)    
+    read(unit=ioUnit, NML=PBLINPUT)
+    close(ioUnit)
 
     Thetaref = Tref
-    ! This will set the value of Tref.     
+    ! This will set the value of Tref.
 
 end subroutine
 
