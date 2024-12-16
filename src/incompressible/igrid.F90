@@ -444,9 +444,10 @@ contains
         ! EYS
         real(rkind)  :: Lx = one, Ly = one
         logical :: initPurturbations = .true.
-        logical :: z0init_field, Primary_Run = .true.   ! EYS
-        real(rkind) :: z0init, z02init, z02init_startx, z02init_endx, zd   ! EYS 
-        logical :: CES_LES_int_var   ! EYS (randomizing seed)
+        logical :: z0init_field = .false., Primary_Run = .true.   
+        real(rkind) :: z0init, z02init, z02init_startx, z02init_endx, zd   
+        logical :: CES_LES_int_var = .false.   ! EYS (randomizing seed)
+        real(rkind) :: Tref = 263.5d0, Tsurf0 = 265.0d0, dTsurf_dt = 0.0d0
         ! EYS
 
         real(rkind), dimension(:,:,:), allocatable, target :: tmpzE, tmpzC, tmpyE, tmpyC
@@ -471,7 +472,7 @@ contains
         namelist /SCALARS/ num_scalars, scalar_info_dir
         namelist /TURB_PRESSURE/ MeanTIDX, MeanRID, MeanFilesDir
         namelist /MOISTURE/ moistureFactor, moisture_info_dir
-        namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYSS
+        namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var, frameAngle        ! EYS
 
         ! STEP 1: READ INPUT 
         ioUnit = 11

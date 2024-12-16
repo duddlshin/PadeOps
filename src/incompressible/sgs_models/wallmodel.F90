@@ -27,8 +27,8 @@ subroutine initWallModel(this, SurfaceFilterFact)
       this%WallMUmatching = 0.1d0     ! EYS added 07142024
       this%WallMVmatching = 0.1d0     ! EYS added 07142024
 
-      call this%spectC%ResetSurfaceFilter(SurfaceFilterFact)   ! EYS added
-      call message(2,"Bou-Zeid wall model set up with a filter factor:", SurfaceFilterFact)   ! EYS added
+      call this%spectC%ResetSurfaceFilter(SurfaceFilterFact)   ! EYS added 07142024
+      call message(2,"Bou-Zeid wall model set up with a filter factor:", SurfaceFilterFact)   ! EYS added 07142024
    case default
       call gracefulExit("Invalid choice of Wallmodel.",324)
    end select

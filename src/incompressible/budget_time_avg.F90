@@ -431,14 +431,14 @@ contains
         end if
 
         ! Step 7: Dump the full budget 
-        ! do idx = 1,size(this%budget_0,4)
-        !     call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
-        ! end do
-
-        ! EYS temporary change to only output u fields for Stanford CTR (07152024)
-        do idx = 1,9
+        do idx = 1,size(this%budget_0,4)
             call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
         end do
+
+        ! EYS temporary change to only output u fields for Stanford CTR (07152024)
+        ! do idx = 1,9
+        !     call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
+        ! end do
 
         ! ! EYS budget dump 2d planes
         ! do idx = 1,size(this%budget_0,4)
