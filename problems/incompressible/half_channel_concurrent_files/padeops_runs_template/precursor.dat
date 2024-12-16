@@ -1,6 +1,6 @@
 &INPUT
-inputdir              = "/home/ctrsp-2024/youngin/PadeOps/data/half_channel_concurrent/midfid_case"   ! Directory for any input files
-outputdir             = "/home/ctrsp-2024/youngin/PadeOps/data/half_channel_concurrent/midfid_case"   ! Directory for all output files
+inputdir              = "/scratch/09033/youngin/padeops_data/half_channel_concurrent/padeops_runs_template"   ! Directory for any input files
+outputdir             = "/scratch/09033/youngin/padeops_data/half_channel_concurrent/padeops_runs_template"   ! Directory for all output files
 nx                    = 72         ! Number of points in X
 ny                    = 36         ! Number of points in Y
 nz                    = 20         ! Number of points in Z

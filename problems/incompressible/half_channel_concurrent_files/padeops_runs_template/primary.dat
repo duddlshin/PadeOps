@@ -1,6 +1,6 @@
 &INPUT
-inputdir              = "/home/ctrsp-2024/youngin/PadeOps/data/half_channel_concurrent/midfid_case"   ! Directory for any input files
-outputdir             = "/home/ctrsp-2024/youngin/PadeOps/data/half_channel_concurrent/midfid_case"   ! Directory for all output files
+inputdir              = "/scratch/09033/youngin/padeops_data/half_channel_concurrent/padeops_runs_template"   ! Directory for any input files
+outputdir             = "/scratch/09033/youngin/padeops_data/half_channel_concurrent/padeops_runs_template"   ! Directory for all output files
 nx                    = 72         ! Number of points in X
 ny                    = 36         ! Number of points in Y
 nz                    = 20         ! Number of points in Z
@@ -153,7 +153,7 @@ CES_LES_int_var       = .FALSE.             ! Are you trying to calculate intern
 &BUDGET_TIME_AVG
 do_budgets            = .TRUE.              ! Perform budget calculations?
 budgetType            = 0                   ! See type descriptions in budget_time_avg.F90
-budgets_dir           = "/home/ctrsp-2024/youngin/mypadeops/PadeOps/data/half_channel_concurrent/midfid_case"              ! Write in default output directory
+budgets_dir           = "/scratch/09033/youngin/padeops_data/half_channel_concurrent/padeops_runs_template"
 tidx_compute          = 1                   ! How often should budgets be computed?
 tidx_dump             = 100                 ! How often should budget files be written to disk?
 tidx_budget_start     = 11000                  ! Start budget computation from this timestep onward

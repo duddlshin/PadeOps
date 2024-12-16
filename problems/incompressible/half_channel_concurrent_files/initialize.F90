@@ -42,8 +42,8 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     real(rkind) :: zpeak = 0.2d0, noiseAmp = 1.d-2
     real(rkind)  :: Lx = one, Ly = one, Lz = one
     logical :: initPurturbations = .true.
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! YIS
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
     logical :: CES_LES_int_var = .FALSE.
     integer :: p
     character(8) :: date
@@ -53,7 +53,7 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     real :: mp
     character(len=20) :: str
 
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
 
 
     ioUnit = 11
@@ -85,7 +85,7 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
 
     allocate(randArr(size(wC,1),size(wC,2),size(wC,3)))
 
-    ! YIS code for generating a random seed each time
+    ! EYS code for generating a random seed each time
     if (CES_LES_int_var) then
         call date_and_time(date,time,zone,values)
         read (unit=time,fmt=*) mp
@@ -163,10 +163,10 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     real(rkind) :: ThetaRef, Lx, Ly, Lz, z0init
     integer :: iounit
     logical :: initPurturbations = .false.
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! YIS
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
     logical :: CES_LES_int_var = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
 
 
     Tsurf = zero; dTsurf_dt = zero; ThetaRef = one
@@ -239,10 +239,10 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     real(rkind)  :: Lx = one, Ly = one, Lz = one
     logical :: initPurturbations = .false.
     real(rkind) :: z0init = 0.1d0 
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd  ! YIS
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd  ! EYS
     logical :: CES_LES_int_var = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
 
 
     ioUnit = 11
@@ -292,10 +292,10 @@ subroutine set_Reference_Temperature(inputfile, Tref)
     real(rkind) :: Lx, Ly, Lz, z0init
     integer :: iounit
     logical :: initPurturbations = .false.
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! YIS
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
     logical :: CES_LES_int_var = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! YIS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
 
 
     ioUnit = 11

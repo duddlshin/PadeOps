@@ -31,9 +31,10 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     real(rkind)  :: Lx = one, Ly = one, Lz = one
     logical :: initPurturbations = .false. 
     real(rkind) :: z0init
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd  ! YIS
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd   ! YIS  
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd  ! EYS
+    logical :: CES_LES_int_var = .FALSE.   ! EYS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var   ! EYS  
 
 
     ioUnit = 11
@@ -98,9 +99,18 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     real(rkind) :: zpeak = 0.2d0, noiseAmp = 1.d-2
     real(rkind)  :: Lx = one, Ly = one, Lz = one
     logical :: initPurturbations = .false. 
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! YIS
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd         ! YIS
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
+    logical :: CES_LES_int_var = .FALSE.
+    integer :: p
+    character(8) :: date
+    character(10) :: time
+    character(5) :: zone
+    integer,dimension(8) :: values
+    real :: mp
+    character(len=20) :: str
+   
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS 
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -128,8 +138,19 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     wC= zero
 
     allocate(randArr(size(wC,1),size(wC,2),size(wC,3)))
-    
-    call gaussian_random(randArr,zero,one,seedu + 100*nrank)
+
+    ! EYS code for generating a random seed each time
+    if (CES_LES_int_var) then
+        call date_and_time(date,time,zone,values)
+        read (unit=time,fmt=*) mp
+        p = int(1000*mp)
+        call message("Adding perturbation")
+        write (str, *) p
+        call message(str)
+        call gaussian_random(randArr,zero,one,p + 100*nrank)
+    else
+        call gaussian_random(randArr,zero,one,seedu + 100*nrank)
+    end if    
     u  = u + noiseAmp*randArr
     
     call gaussian_random(randArr,zero,one,seedv + 100*nrank)
@@ -220,10 +241,11 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     integer :: iounit
     logical :: initPurturbations = .false. 
     real(rkind) :: z0init
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! YIS
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd   ! YIS
-    
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
+    logical :: CES_LES_int_var = .FALSE.
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
+
     Tsurf = zero; dTsurf_dt = zero; ThetaRef = one
     
 
@@ -245,9 +267,10 @@ subroutine set_Reference_Temperature(inputfile, Tref)
     integer :: iounit
     logical :: initPurturbations = .false.
     real(rkind) :: z0init
-    logical :: z0init_field   ! YIS
-    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! YIS
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd   ! YIS
+    logical :: z0init_field   ! EYS
+    real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
+    logical :: CES_LES_int_var = .FALSE.
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')

@@ -1,5 +1,5 @@
 &concurrent
-primary_InputFile             = "/home/ctrsp-2024/youngin/mypadeops/PadeOps/problems/incompressible/half_channel_concurrent_files/padeops_runs_template/primary.dat"
-precursor_InputFile           = "/home/ctrsp-2024/youngin/mypadeops/PadeOps/problems/incompressible/half_channel_concurrent_files/padeops_runs_template/precursor.dat"
+primary_InputFile             = "/work2/09033/youngin/stampede3/PadeOps/problems/incompressible/half_channel_concurrent_files/padeops_runs_template/primary.dat"
+precursor_InputFile           = "/work2/09033/youngin/stampede3/PadeOps/problems/incompressible/half_channel_concurrent_files/padeops_runs_template/precursor.dat"
 synchronize_RK_fringe         = .true.
 /
