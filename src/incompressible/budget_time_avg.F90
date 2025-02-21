@@ -440,11 +440,11 @@ contains
         !     call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
         ! end do
 
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
         ! do idx = 1,size(this%budget_0,4)
         !     call this%dump_budget_field_2d(this%budget_0(:,:,:,idx),idx,0) 
         ! end do
-        ! ! EYS budget dump 2d planes 
+        ! EYS budget dump 2d planes 
         
         ! Step 8: Go back to summing
         this%budget_0(:,:,:,25) = this%budget_0(:,:,:,25) + this%budget_0(:,:,:,13)*this%budget_0(:,:,:,1)
@@ -650,11 +650,11 @@ contains
             call this%dump_budget_field(this%budget_1(:,:,:,idx),idx,1)
         end do
 
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
         ! do idx = 1,size(this%budget_1,4)
         !     call this%dump_budget_field_2d(this%budget_1(:,:,:,idx),idx,1)
         ! end do
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
 
         ! Step 3: Go back to summing instead of averaging
         this%budget_1 = this%budget_1*(real(this%counter,rkind) + 1.d-18)
@@ -784,11 +784,11 @@ contains
             call this%dump_budget_field(this%budget_2(:,:,:,idx),idx,2)
         end do
 
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
         ! do idx = 1,size(this%budget_2,4)
         !     call this%dump_budget_field_2d(this%budget_2(:,:,:,idx),idx,2)
         ! end do
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
  
     end subroutine 
 
@@ -929,11 +929,11 @@ contains
             call this%dump_budget_field(this%budget_3(:,:,:,idx),idx,3)
         end do 
 
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
         ! do idx = 1,size(this%budget_3,4)
         !     call this%dump_budget_field_2d(this%budget_3(:,:,:,idx),idx,3)
         ! end do
-        ! ! EYS budget dump 2d planes
+        ! EYS budget dump 2d planes
 
 
         ! Revert arrays to the correct state for Assemble (Order is very

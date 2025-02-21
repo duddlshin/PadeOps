@@ -1,3 +1,7 @@
+! EYS 02012025
+! Changes to the way z0,d are implemented as an urban canopy model in wall model
+
+
 subroutine destroyWallModel(this)
    class(sgs_igrid), intent(inout) :: this
    deallocate(this%tauijWM, this%tauijWMhat_inZ, this%tauijWMhat_inY)
@@ -101,7 +105,8 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
 
            ! EYS: formulate WM epsilon 
            if (this%TemporalFilter) then
-               this%WallMEpsilon = this%WMEpsilonFact * 2.0d0 * kappa * dt / this%dz
+               ! this%WallMEpsilon = this%WMEpsilonFact * 2.0d0 * kappa * dt / this%dz
+               this%WallMEpsilon = 0.01d0     ! EYS 02192025: constant filter value
            else 
                this%WallMEpsilon = 1.0d0
            end if
@@ -117,11 +122,17 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
                    locator_max = minloc(abs(xline - this%z02_endx))
                    matchingloc = real(this%WM_matchingIndex)-real(one)/real(two)
 
-                   ! Overwrite based on assigned geometry
+                   ! EYS 02012025
+                   ! Overwrite based on assigned geometry (momentum exchange parameterization based on Li et al, 2020)
+                   ! Note roof momentum exchange coefficient calculated using prescribed z0 = z0roof
+                   ! this%WallMFactors(locator_min(1):locator_max(1),:) = -this%idxPlanArea * (kappa / (log(this%dz / (two * this%z0roof)) - this%PsiM))**2 - (1-this%idxPlanArea) * (kappa / (log((this%dz*matchingloc - this%zd) / this%z02) - this%PsiM))**2
+                  
+                   ! EYS previous implementation of roughness parameterization
                    this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log((this%dz*matchingloc - this%zd) / this%z02) - this%PsiM))**2
- 
+
                    call this%getfilteredSpeedSqAtWall(uhat, vhat)
 
+                   ! Calculates -ustar**2 
                    do k = 1, this%gpC%xsz(3)
                        this%filteredSpeedSq(:,:,k) = this%WallMFactors(:,:) * this%filteredSpeedSq(:,:,k)
                    end do                    
@@ -390,7 +401,11 @@ subroutine compute_local_wallmodel(this, ux, uy, Tmn, wTh_surf, ustar, Linv, Psi
           wTh_surf = wTh
           T_surf = this%Tsurf
       case(1) ! Homogeneous Neumann BC for temperature
-          ustar = this%Uspmn*kappa/(log(hwm/this%z0))
+          if (this%z0_field) then
+              this%ustar = this%Uspmn*kappa/(log((hwm-this%zd)/this%z02))
+          else
+              this%ustar = this%Uspmn*kappa/(log(hwm/this%z0))
+          endif
           Linv = zero
           wTh_surf = zero
           PsiM = zero
@@ -491,10 +506,16 @@ subroutine getSurfaceQuantities(this)
           this%ustar = ustar; this%invObLength = Linv; this%wTh_surf = wTh
           this%PsiM = PsiM
       case(1) ! Homogeneous Neumann BC for temperature
-          this%ustar = this%Uspmn*kappa/(log(hwm/this%z0))
+          if (this%z0_field) then
+              this%ustar = this%Uspmn*kappa/(log((hwm-this%zd)/this%z02)) 
+          else 
+              this%ustar = this%Uspmn*kappa/(log(hwm/this%z0))
+          endif
+
           this%invObLength = zero
           this%wTh_surf = zero
           this%PsiM = zero
+
       case(2) ! Inhomogeneous Neumann BC for temperature
           Linv = zero; !dTheta = this%Tsurf - this%Tmn;
           ustarDiff = one; wTh = this%wTh_surf

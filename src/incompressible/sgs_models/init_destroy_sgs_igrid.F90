@@ -43,7 +43,9 @@ subroutine link_pointers(this, nuSGS, tauSGS_ij, tau13, tau23, q1, q2, q3, kappa
    end if
 end subroutine 
 
-subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, zMeshC, fBody_x, fBody_y, fBody_z, computeFbody, PadeDer, cbuffyC, cbuffzC, cbuffyE, cbuffzE, rbuffxC, rbuffyC, rbuffzC, rbuffyE, rbuffzE, Tsurf, ThetaRef, wTh_surf, Fr, Re, isInviscid, isStratified, botBC_temp, initSpinUp, z0, z0_field, z02, z02_startx, z02_endx, Primary_Run, zd)   ! EYS added z0 things at the end
+subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, zMeshC, fBody_x, fBody_y, fBody_z, computeFbody, &
+        PadeDer, cbuffyC, cbuffzC, cbuffyE, cbuffzE, rbuffxC, rbuffyC, rbuffzC, rbuffyE, rbuffzE, Tsurf, ThetaRef, wTh_surf, Fr, Re, &
+        isInviscid, isStratified, botBC_temp, initSpinUp, z0, z0_field, z02, z02_startx, z02_endx, Primary_Run, zd, idxPlanArea, z0roof)   ! EYS added z0 things at the end
 
   class(sgs_igrid), intent(inout), target :: this
   class(decomp_info), intent(in), target :: gpC, gpE
@@ -63,7 +65,7 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
 
   ! EYS z0 things
   logical, intent(in) :: z0_field, Primary_Run    ! EYS
-  real(rkind), intent(in) :: z0, z02, z02_startx, z02_endx, zd  ! EYS
+  real(rkind), intent(in) :: z0, z02, z02_startx, z02_endx, zd, idxPlanArea, z0roof  ! EYS
 
   ! Input file variables
   logical :: DomainAveraged_DynProc = .false., useWallDamping = .false., useSGSDynamicRestart = .false., useVerticalTfilter = .false.
@@ -178,6 +180,8 @@ subroutine init(this, gpC, gpE, spectC, spectE, dx, dy, dz, inputfile, zMeshE, z
   this%zd = zd
   this%WMEpsilonFact = WMEpsilonFact
   this%TemporalFilter = TemporalFilter
+  this%idxPlanArea = idxPlanArea
+  this%z0roof = z0roof
   ! EYS
 
   this%DynamicProcedureType = DynamicProcedureType

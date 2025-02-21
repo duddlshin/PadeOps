@@ -53,8 +53,9 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     integer,dimension(8) :: values
     real :: mp
     character(len=20) :: str
-    
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
+
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -82,23 +83,23 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     allocate(Tpurt(decompC%xsz(1),decompC%xsz(2),decompC%xsz(3)))
     ztmp = z*xDim
     
-    ! Conventionally neutral abl temperature profile 
-    ! T = 0.003d0*(ztmp - 700.d0) + 300.d0
-    ! where(ztmp < 700.d0)
-    !     T = 300.d0
-    ! end where
-    ! T = T + 0.0001d0*ztmp
+    ! Conventionally neutral abl temperature profile (original profile for initialization)
+    T = 0.003d0*(ztmp - 700.d0) + 300.d0
+    where(ztmp < 700.d0)
+        T = 300.d0
+    end where
+    T = T + 0.0001d0*ztmp
 
     ! EYS start
-    ! Liu et al method for CNBL temperature profile
-    T = 300.d0 + 0.001d0*(ztmp)
+    ! Liu et al method for CNBL initial potential temperature profile
+    ! T = 300.d0 + 0.003d0*(ztmp)
     ! EYS end
 
     ! EYS start
-    ! Make into neutral potT profile
-    ! where(ztmp < 10000.d0)
-    !    T = 300.d0
-    ! end where
+    ! Make into truly neutral potT profile
+    where(ztmp < 10000.d0)
+      T = 300.d0
+    end where
     ! EYS end
 
 
@@ -189,7 +190,8 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     logical :: CES_LES_int_var = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
     logical :: z0init_field = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -263,7 +265,8 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     logical :: CES_LES_int_var = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
     logical :: z0init_field = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -315,7 +318,8 @@ subroutine set_Reference_Temperature(inputfile, Thetaref)
     logical :: CES_LES_int_var = .FALSE.    
     logical :: z0init_field = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')

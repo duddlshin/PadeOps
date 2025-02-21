@@ -9,9 +9,9 @@ CFL                           = 1.0D0       ! CFL criterion for calculating the 
 dt                            = 0.001D0     ! Fixed time step value (only used if CFL is set to negative)
 prow                          = 0           ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
 pcol                          = 0           ! Number of rows in 2D processor decomposition (set 0 for auto-tuning)
-useRestartFile                = .FALSE.      ! Set to false if it's a fresh simulation
-restartFile_TID               = 35000       ! TimeID of the restart file being used
-restartFile_RID               = 4           ! RunID
+useRestartFile                = .TRUE.      ! Set to false if it's a fresh simulation
+restartFile_TID               = 30000       ! TimeID of the restart file being used
+restartFile_RID               = 1           ! RunID
 Primary_Run                   = .TRUE.
 /
 /
@@ -39,7 +39,7 @@ dump_KAPPA_SGS                = .TRUE.
 /
 /
 &STATS
-tid_StatsDump                 = 5000        ! Dumping Frequency for Statistics file (# of time steps)
+tid_StatsDump                 = 10000        ! Dumping Frequency for Statistics file (# of time steps)
 tid_compStats                 = 1           ! Frequency of Computing Statistics
 tSimStartStats                = 20.d0       ! Simulation time for starting stats calculations
 normStatsByUstar              = .FALSE.     ! Normalize Statistics by ustar at each instant
@@ -140,6 +140,8 @@ angleTrigger                  =  0.1d0      ! Angle at z_ref where control turns
 Lx                            =  16.0d0     ! Domain Length (appropriate dimesnions/non-dimensionalized)
 Ly                            =  8.0d0      ! Domain Width  (appropriate dimesnions/non-dimensionalized)
 Lz                            =  6.0d0      ! Domain Height (appropriate dimesnions/non-dimensionalized)
+Tref                          =  263.5d0     ! Reference Temp.
+Tsurf0                        =  265.0d0     ! Surface Temp. (at tsim=0) in K (need to take care of the dimensions)
 dTsurf_dt                     =  0.0D0      ! Surface Temp. decrease rate in K/hr. (need to take care of the dimensions)
 z0init                        =  0.00025d0  ! Roughness scale used to initialize the profile
 z0init_field                  =  .FALSE.      ! To initiate a varied z0 field (use only when useFullyLocalWM is true)
@@ -152,11 +154,11 @@ frameAngle                    =  0.d0       ! Frame angle set to be the same as 
 /
 &BUDGET_TIME_AVG
 do_budgets                    = .TRUE.              ! Perform budget calculations?
-budgetType                    = 0                   ! See type descriptions in budget_time_avg.F90
+budgetType                    = 3                   ! See type descriptions in budget_time_avg.F90
 budgets_dir                   = "/scratch/09033/youngin/padeops_data/neutral/cnbl/G8z01"    ! Write in default output directory
 tidx_compute                  = 5                   ! How often should budgets be computed?
-tidx_dump                     = 5000                 ! How often should budget files be written to disk?
-tidx_budget_start             = 10000                ! Start budget computation from this timestep onward
+tidx_dump                     = 140                 ! How often should budget files be written to disk?
+tidx_budget_start             = 1000                ! Start budget computation from this timestep onward
 restart_budgets               = .FALSE.             ! use existing budget file to restart budget calculations?
 restart_rid                   = 2                   ! Restart budget file run index
 restart_tid                   = 99999               ! Restart budget file time index

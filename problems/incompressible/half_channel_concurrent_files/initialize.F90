@@ -44,6 +44,7 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     logical :: initPurturbations = .true.
     logical :: z0init_field   ! EYS
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
+    real(rkind) :: idxPlanArea, z0roof    ! EYS
     logical :: CES_LES_int_var = .FALSE.
     integer :: p
     character(8) :: date
@@ -53,7 +54,7 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     real :: mp
     character(len=20) :: str
 
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var, idxPlanArea, z0roof        ! EYS
 
 
     ioUnit = 11
@@ -166,8 +167,8 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     logical :: z0init_field   ! EYS
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
     logical :: CES_LES_int_var = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
-
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var, idxPlanArea, z0roof        ! EYS
 
     Tsurf = zero; dTsurf_dt = zero; ThetaRef = one
 
@@ -242,7 +243,8 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     logical :: z0init_field   ! EYS
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd  ! EYS
     logical :: CES_LES_int_var = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var, idxPlanArea, z0roof        ! EYS
 
 
     ioUnit = 11
@@ -295,8 +297,8 @@ subroutine set_Reference_Temperature(inputfile, Tref)
     logical :: z0init_field   ! EYS
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd   ! EYS
     logical :: CES_LES_int_var = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var         ! EYS
-
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, z0init_field, z0init, z02init, z02init_startx, z02init_endx, initPurturbations, zd, CES_LES_int_var, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
