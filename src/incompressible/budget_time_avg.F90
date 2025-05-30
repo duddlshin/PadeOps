@@ -123,6 +123,7 @@ module budgets_time_avg_mod
         logical :: do_budgets
         logical :: forceDump
         logical :: splitPressureDNS
+        integer :: save_dimension    ! EYS 05302025
 
     contains
         procedure           :: init
@@ -175,8 +176,10 @@ contains
         logical :: restart_budgets = .false. 
         integer :: tidx_compute = 1000000, tidx_dump = 1000000, tidx_budget_start = -100
         real(rkind) :: time_budget_start = -1.0d0
-        logical :: do_budgets = .false. 
-        namelist /BUDGET_TIME_AVG/ budgetType, budgets_dir, restart_budgets, restart_rid, restart_tid, restart_counter, tidx_dump, tidx_compute, do_budgets, tidx_budget_start, time_budget_start
+        logical :: do_budgets = .false.
+        integer :: save_dimension = 3 
+        namelist /BUDGET_TIME_AVG/ budgetType, budgets_dir, restart_budgets, restart_rid, restart_tid, restart_counter, tidx_dump, &
+        tidx_compute, do_budgets, tidx_budget_start, time_budget_start, save_dimension 
         
         ! STEP 1: Read in inputs, link pointers and allocate budget vectors
         ioUnit = 534
@@ -199,6 +202,7 @@ contains
 
         this%budgets_dir = budgets_dir
         this%budgetType = budgetType
+        this%save_dimension = save_dimension      ! EYS 05302025
 
         this%splitPressureDNS = this%igrid_sim%computeDNSPressure
 
@@ -369,8 +373,9 @@ contains
             call this%dumpbudget3()
         end if 
 
+        ! EYS 02242025: commented out because inadvertent errors caused by this
         ! Scalar and Turbine Stats
-        call this%DumpScalarStats()
+        ! call this%DumpScalarStats()
     end subroutine 
 
     ! ---------------------- Budget 0 ------------------------
@@ -431,21 +436,17 @@ contains
         end if
 
         ! Step 7: Dump the full budget 
-        do idx = 1,size(this%budget_0,4)
-            call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
-        end do
+        if (this%save_dimension == 3) then
+            do idx = 1,size(this%budget_0,4)
+                call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
+            end do
+        elseif (this%save_dimension == 2) then
+            ! EYS budget dump 2d planes (05302025)
+            do idx = 1,size(this%budget_0,4)
+                call this%dump_budget_field_2d(this%budget_0(:,:,:,idx),idx,0) 
+            end do
+        end if
 
-        ! EYS temporary change to only output u fields for Stanford CTR (07152024)
-        ! do idx = 1,9
-        !     call this%dump_budget_field(this%budget_0(:,:,:,idx),idx,0)
-        ! end do
-
-        ! EYS budget dump 2d planes
-        ! do idx = 1,size(this%budget_0,4)
-        !     call this%dump_budget_field_2d(this%budget_0(:,:,:,idx),idx,0) 
-        ! end do
-        ! EYS budget dump 2d planes 
-        
         ! Step 8: Go back to summing
         this%budget_0(:,:,:,25) = this%budget_0(:,:,:,25) + this%budget_0(:,:,:,13)*this%budget_0(:,:,:,1)
         this%budget_0(:,:,:,25) = this%budget_0(:,:,:,25) + this%budget_0(:,:,:,15)*this%budget_0(:,:,:,2)
@@ -645,16 +646,17 @@ contains
         ! Step 1: Get the average from sum
         this%budget_1 = this%budget_1/(real(this%counter,rkind) + 1.d-18)
         
-        ! Step 2: Dump the full budget 
-        do idx = 1,size(this%budget_1,4)
-            call this%dump_budget_field(this%budget_1(:,:,:,idx),idx,1)
-        end do
-
-        ! EYS budget dump 2d planes
-        ! do idx = 1,size(this%budget_1,4)
-        !     call this%dump_budget_field_2d(this%budget_1(:,:,:,idx),idx,1)
-        ! end do
-        ! EYS budget dump 2d planes
+        ! Step 2: Dump the full budget
+        if (this%save_dimension == 3) then
+            do idx = 1,size(this%budget_1,4)
+                call this%dump_budget_field(this%budget_1(:,:,:,idx),idx,1)
+            end do
+        elseif (this%save_dimension == 2) then
+            ! EYS budget dump 2d planes (05302025)
+            do idx = 1,size(this%budget_1,4)
+                call this%dump_budget_field_2d(this%budget_1(:,:,:,idx),idx,1)
+            end do
+        end if 
 
         ! Step 3: Go back to summing instead of averaging
         this%budget_1 = this%budget_1*(real(this%counter,rkind) + 1.d-18)
@@ -780,16 +782,17 @@ contains
         integer :: idx
 
         ! Dump the full budget 
-        do idx = 1,size(this%budget_2,4)
-            call this%dump_budget_field(this%budget_2(:,:,:,idx),idx,2)
-        end do
+        if (this%save_dimension == 3) then
+            do idx = 1,size(this%budget_2,4)
+                call this%dump_budget_field(this%budget_2(:,:,:,idx),idx,2)
+            end do
+        elseif (this%save_dimension == 2) then
+            ! EYS budget dump 2d planes (05302025)
+            do idx = 1,size(this%budget_2,4)
+                call this%dump_budget_field_2d(this%budget_2(:,:,:,idx),idx,2)
+            end do
+        end if
 
-        ! EYS budget dump 2d planes
-        ! do idx = 1,size(this%budget_2,4)
-        !     call this%dump_budget_field_2d(this%budget_2(:,:,:,idx),idx,2)
-        ! end do
-        ! EYS budget dump 2d planes
- 
     end subroutine 
 
     
@@ -925,16 +928,16 @@ contains
 
 
         ! Dump the full budget 
-        do idx = 1,size(this%budget_3,4)
-            call this%dump_budget_field(this%budget_3(:,:,:,idx),idx,3)
-        end do 
-
-        ! EYS budget dump 2d planes
-        ! do idx = 1,size(this%budget_3,4)
-        !     call this%dump_budget_field_2d(this%budget_3(:,:,:,idx),idx,3)
-        ! end do
-        ! EYS budget dump 2d planes
-
+        if (this%save_dimension == 3) then
+            do idx = 1,size(this%budget_3,4)
+                call this%dump_budget_field(this%budget_3(:,:,:,idx),idx,3)
+            end do 
+        elseif (this%save_dimension == 2) then
+            ! EYS budget dump 2d planes (05302025)
+            do idx = 1,size(this%budget_3,4)
+                call this%dump_budget_field_2d(this%budget_3(:,:,:,idx),idx,3)
+            end do
+        end if
 
         ! Revert arrays to the correct state for Assemble (Order is very
         ! important throughout this subroutine, particularly indices 5 and 6)

@@ -344,6 +344,17 @@
        end if
    end subroutine
 
+   ! EYS 03092025: add a reverting offset for the log layer mismatch from displacement in wall model formulation
+   ! EYS start
+   ! subroutine addDisplacementForcingTerm(this)
+   !     class(igrid), intent(inout) :: this
+   !     this%u_rhs = this%u_rhs + this%tauoverdhat
+   !     if (this%storeFbody) then
+   !         this%fbody_x = this%fbody_x + this%tauoverd
+   !     end if 
+   ! end subroutine
+   ! EYS end
+
    subroutine addBuoyancyTerm(this, urhs, vrhs, wrhs)
        class(igrid), intent(inout), target :: this
        complex(rkind), dimension(:,:,:), pointer :: fT1E, fT1C

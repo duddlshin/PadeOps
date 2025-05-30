@@ -105,8 +105,8 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
 
            ! EYS: formulate WM epsilon 
            if (this%TemporalFilter) then
-               ! this%WallMEpsilon = this%WMEpsilonFact * 2.0d0 * kappa * dt / this%dz
-               this%WallMEpsilon = 0.01d0     ! EYS 02192025: constant filter value
+               this%WallMEpsilon = this%WMEpsilonFact * 2.0d0 * kappa * dt / this%dz
+               ! this%WallMEpsilon = 0.01d0     ! EYS 02192025: constant filter value
            else 
                this%WallMEpsilon = 1.0d0
            end if
@@ -127,9 +127,12 @@ subroutine computeWallStress(this, u, v, T, uhat, vhat, That, xline, dt)
                    ! Note roof momentum exchange coefficient calculated using prescribed z0 = z0roof
                    ! this%WallMFactors(locator_min(1):locator_max(1),:) = -this%idxPlanArea * (kappa / (log(this%dz / (two * this%z0roof)) - this%PsiM))**2 - (1-this%idxPlanArea) * (kappa / (log((this%dz*matchingloc - this%zd) / this%z02) - this%PsiM))**2
                   
-                   ! EYS previous implementation of roughness parameterization
+                   ! EYS CTR implementation of roughness parameterization
                    this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log((this%dz*matchingloc - this%zd) / this%z02) - this%PsiM))**2
-
+  
+                   ! EYS implementation of roughness parameterization with offset 02222025
+                   ! this%WallMFactors(locator_min(1):locator_max(1),:) = -(kappa / (log((this%dz*matchingloc - this%zd) / this%z02) + log(this%dz*matchingloc/(this%dz*matchingloc - this%zd)) - this%PsiM))**2
+                   
                    call this%getfilteredSpeedSqAtWall(uhat, vhat)
 
                    ! Calculates -ustar**2 
@@ -403,6 +406,9 @@ subroutine compute_local_wallmodel(this, ux, uy, Tmn, wTh_surf, ustar, Linv, Psi
       case(1) ! Homogeneous Neumann BC for temperature
           if (this%z0_field) then
               this%ustar = this%Uspmn*kappa/(log((hwm-this%zd)/this%z02))
+
+              ! EYS 02222025: test modification to ustar formulation for offset
+              ! this%ustar = this%Uspmn*kappa/(log((hwm-this%zd)/this%z02) + log(hwm/(hwm-this%zd)))
           else
               this%ustar = this%Uspmn*kappa/(log(hwm/this%z0))
           endif
@@ -508,6 +514,9 @@ subroutine getSurfaceQuantities(this)
       case(1) ! Homogeneous Neumann BC for temperature
           if (this%z0_field) then
               this%ustar = this%Uspmn*kappa/(log((hwm-this%zd)/this%z02)) 
+
+              ! EYS 02222025: test modification to ustar formulation for offset
+              ! this%ustar = this%Uspmn*kappa/(log((hwm-this%zd)/this%z02) + log(hwm/(hwm-this%zd)))
           else 
               this%ustar = this%Uspmn*kappa/(log(hwm/this%z0))
           endif
