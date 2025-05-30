@@ -1,6 +1,6 @@
 &INPUT
-inputdir                      = "/scratch/09033/youngin/padeops_data/sbl/G8z00001"     ! Directory for any input files
-outputdir                     = "/scratch/09033/youngin/padeops_data/sbl/G8z00001"     ! Directory for all output files
+inputdir                      = "/scratch/09033/youngin/padeops_data/sbl/G8z00001/run1"     ! Directory for any input files
+outputdir                     = "/scratch/09033/youngin/padeops_data/sbl/G8z00001/run1"     ! Directory for all output files
 nx                            = 64          ! Number of points in X
 ny                            = 64          ! Number of points in Y
 nz                            = 64          ! Number of points in Z
@@ -153,12 +153,12 @@ frameAngle                    =  0.d0       ! Frame angle set to be the same as 
 /
 /
 &BUDGET_TIME_AVG
-do_budgets            = .TRUE.              ! Perform budget calculations?
+do_budgets            = .FALSE.              ! Perform budget calculations?
 budgetType            = 0                   ! See type descriptions in budget_time_avg.F90
-budgets_dir           = "/scratch/09033/youngin/padeops_data/sbl/G8z00001"              ! Write in default output directory
+budgets_dir           = "/scratch/09033/youngin/padeops_data/sbl/G8z00001/run1"              ! Write in default output directory
 tidx_compute          = 5                   ! How often should budgets be computed?
-tidx_dump             = 511                 ! How often should budget files be written to disk?
-tidx_budget_start     = 40880               ! Start budget computation from this timestep onward
+tidx_dump             = 665                 ! How often should budget files be written to disk?
+tidx_budget_start     = 48000               ! Start budget computation from this timestep onward
 restart_budgets       = .FALSE.             ! use existing budget file to restart budget calculations?
 restart_rid           = 2                   ! Restart budget file run index
 restart_tid           = 99999               ! Restart budget file time index

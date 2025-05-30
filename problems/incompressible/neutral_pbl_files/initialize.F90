@@ -84,11 +84,11 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     ztmp = z*xDim
     
     ! Conventionally neutral abl temperature profile (original profile for initialization)
-    T = 0.003d0*(ztmp - 700.d0) + 300.d0
-    where(ztmp < 700.d0)
-        T = 300.d0
-    end where
-    T = T + 0.0001d0*ztmp
+    ! T = 0.003d0*(ztmp - 700.d0) + 300.d0
+    ! where(ztmp < 700.d0)
+    !     T = 300.d0
+    ! end where
+    ! T = T + 0.0001d0*ztmp
 
     ! EYS start
     ! Liu et al method for CNBL initial potential temperature profile
@@ -102,6 +102,16 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     end where
     ! EYS end
 
+
+    ! EYS 03022025
+    ! Make potT profile for unstable case
+    ! T = 0.01d0*(ztmp - 300.d0) + 300.d0
+    ! where(ztmp < 1000.d0)
+    !   T = 277.1d0 + 0.03 * ztmp
+    ! end where
+    ! where(ztmp < 800.d0)
+    !   T = 301.d0
+    ! end where
 
     ! Add random numbers
     ! EYS code for generating a random seed each time

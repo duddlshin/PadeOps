@@ -53,8 +53,8 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     integer,dimension(8) :: values
     real :: mp
     character(len=20) :: str
- 
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -87,6 +87,24 @@ subroutine initfields_wallM(decompC, decompE, inputfile, mesh, fieldsC, fieldsE)
     end where
     T = T + 0.0001d0*ztmp
 
+    ! EYS 03022025
+    ! Make potT profile for unstable case
+    ! T = 0.01d0*(ztmp - 300.d0) + 300.d0
+    ! where(ztmp < 1000.d0)
+    !   T = 277.1d0 + 0.03 * ztmp
+    ! end where
+    ! where(ztmp < 800.d0)
+    !     T = 301.d0
+    ! end where
+    ! T = T + 0.0001d0*ztmp
+    
+    ! T = 0.01d0*(ztmp - 300.d0) + 300.d0
+    ! where(ztmp < 1000.d0)
+    !   T = 277.1d0 + 0.03 * ztmp
+    ! end where
+    ! where(ztmp < 800.d0)
+    !   T = 301.d0
+    ! end where
 
     ! Add random numbers
     ! EYS code for generating a random seed each time
@@ -153,8 +171,9 @@ subroutine setInhomogeneousNeumannBC_Temp(inputfile, wTh_surf)
     logical :: CES_LES_int_var = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
     logical :: z0init_field = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
-     
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
+
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
     read(unit=ioUnit, NML=PBLINPUT)
@@ -175,8 +194,9 @@ subroutine setDirichletBC_Temp(inputfile, Tsurf, dTsurf_dt)
     logical :: CES_LES_int_var = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
     logical :: z0init_field = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS    
- 
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS 
+    
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
     read(unit=ioUnit, NML=PBLINPUT)
@@ -249,7 +269,8 @@ subroutine meshgen_wallM(decomp, dx, dy, dz, mesh, inputfile)
     logical :: CES_LES_int_var = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
     logical :: z0init_field = .FALSE.
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
@@ -300,7 +321,8 @@ subroutine set_Reference_Temperature(inputfile, Thetaref)
     logical :: CES_LES_int_var = .FALSE.
     logical :: z0init_field = .FALSE.
     real(rkind) :: z02init, z02init_startx, z02init_endx, zd
-    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle         ! EYS
+    real(rkind) :: idxPlanArea, z0roof        ! EYS 02012025
+    namelist /PBLINPUT/ Lx, Ly, Lz, Tref, Tsurf0, dTsurf_dt, z0init_field, z0init, z02init, z02init_startx, z02init_endx, zd, CES_LES_int_var, frameAngle, idxPlanArea, z0roof        ! EYS
 
     ioUnit = 11
     open(unit=ioUnit, file=trim(inputfile), form='FORMATTED')
